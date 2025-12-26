@@ -1,0 +1,29 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+_override.tf
+_override.tf.json
+.terraformrc
+terraform.rc
+
+# AWS
+.aws/
+
+# OS/IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Apps (generic build artifacts)
+node_modules/
+dist/
+build/
+*.log
+.env
+.env.*
