@@ -67,20 +67,31 @@ graph TD
 
 ### 2. AWS認証設定 (重要)
 
-インフラ作成には、以下のいずれかの方法で認証が完了している必要があります。
+インフラ作成には、以下のいずれかの方法で認証が完了している必要があります。初めての場合は **方法A** がおすすめです。
 
-#### 方法A: 認証プロファイル (推奨)
+#### 方法A: AWS CLI 認証プロファイル (推奨)
 ```bash
+# プロファイルを作成（対話形式で入力）
 aws configure --profile aws-terraform-sample
-# インタラクティブに Access Key / Secret Key / Region (ap-northeast-1) を入力
 ```
 
-#### 方法B: 環境変数
-シェルに以下の環境変数をセットしてください。
+**入力項目:**
+1. **Access Key ID / Secret Access Key**: AWSコンソールの「IAM」→「マイセキュリティ認証情報」で「アクセスキーを作成」して取得してください。
+2. **Default region name**: `ap-northeast-1`
+3. **Default output format**: `json`
+
+#### 方法B: 環境変数 (一時的)
+現在のターミナルセッションのみで有効にする場合：
 ```bash
 export AWS_ACCESS_KEY_ID="AKIA..."
 export AWS_SECRET_ACCESS_KEY="wJalrXUtn..."
 export AWS_DEFAULT_REGION="ap-northeast-1"
+```
+
+#### 🛠 認証の疎通確認
+設定完了後、以下のコマンドで自分のAWSアカウント情報が返ってくれば成功です。
+```bash
+aws sts get-caller-identity --profile aws-terraform-sample
 ```
 
 ### 3. GitHub Actions 連携用環境変数 (Variables & Secrets)
