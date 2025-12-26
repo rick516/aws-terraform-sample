@@ -6,6 +6,9 @@
 
 「入口はALB」「実行はECS」「状態はRDS」という、Rails + Next.js等のWebアプリで最も汎用的な構成を採用しています。
 
+> [!TIP]
+> **「なぜこの構成がプロダクションレディーなのか？」** の詳細な解説は [PRODUCTION_READY.md](./PRODUCTION_READY.md) をご覧ください。構築のステップと設計意図を深掘りしています。
+
 ```mermaid
 graph TD
   User((User)) --> ALB[ALB: Public Subnet]
