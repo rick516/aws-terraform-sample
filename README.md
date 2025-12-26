@@ -38,7 +38,7 @@ graph TD
   NAT -.-> Logs[CloudWatch Logs]
 ```
 
-## 💎 現場っぽさのポイント（ここが語れる）
+## 💎 現場っぽさのポイント
 
 - **State管理**: S3 Backend (`use_lockfile=true`) を使用し、ローカルに状態を置かないプロ仕様。
 - **CI/CD OIDC**: GitHub ActionsにAWS鍵を置かず、OIDCによる一時認証でセキュアに連携。
