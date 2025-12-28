@@ -109,3 +109,87 @@ resource "aws_iam_role_policy_attachment" "github_actions_admin" {
   role       = aws_iam_role.github_actions.name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
+
+# --------------------------------------------------------------------------------------------------
+# 4) Cost Monitoring (Budgets + SNS + Chatbot)
+# --------------------------------------------------------------------------------------------------
+
+# SNS Topic: Budget からの通知を受け取る窓口
+resource "aws_sns_topic" "budget_notifications" {
+  name = "${var.project}-budget-notifications"
+}
+
+# SNS Topic Policy: AWS Budgets がこの Topic に Publish できるように許可
+resource "aws_sns_topic_policy" "budget_notifications" {
+  arn    = aws_sns_topic.budget_notifications.arn
+  policy = data.aws_iam_policy_document.sns_topic_policy.json
+}
+
+data "aws_iam_policy_document" "sns_topic_policy" {
+  statement {
+    actions = ["sns:Publish"]
+    effect  = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["budgets.amazonaws.com"]
+    }
+
+    resources = [aws_sns_topic.budget_notifications.arn]
+  }
+}
+
+# AWS Budgets: 予算設定
+resource "aws_budgets_budget" "monthly_cost" {
+  name              = "${var.project}-monthly-budget"
+  budget_type       = "COST"
+  limit_amount      = var.monthly_budget_usd
+  limit_unit        = "USD"
+  time_period_start = "2024-01-01_00:00"
+  time_unit         = "MONTHLY"
+
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 80
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_sns_topic_arns = [aws_sns_topic.budget_notifications.arn]
+  }
+
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 100
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_sns_topic_arns = [aws_sns_topic.budget_notifications.arn]
+  }
+}
+
+# AWS Chatbot: Slack 連携
+# 注意: 初回のみ、AWSコンソールで Slack Workspace を認証（Configure client）しておく必要があります。
+resource "aws_iam_role" "chatbot" {
+  name = "${var.project}-chatbot-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "chatbot.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "chatbot_readonly" {
+  role       = aws_iam_role.chatbot.name
+  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+}
+
+resource "aws_chatbot_slack_channel_configuration" "budget_alerts" {
+  configuration_name = "${var.project}-budget-alerts"
+  iam_role_arn       = aws_iam_role.chatbot.arn
+  slack_channel_id   = var.slack_channel_id
+  slack_workspace_id = var.slack_workspace_id
+  sns_topic_arns     = [aws_sns_topic.budget_notifications.arn]
+}
